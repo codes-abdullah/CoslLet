@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="root" spacing="5.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="codes.abdullah.cosl.ui.controller.StopTracker">
+	<children>
+		<HBox alignment="CENTER_RIGHT">
+			<children>
+				<DatePicker fx:id="dpDate" promptText="date" />
+				<Pane HBox.hgrow="ALWAYS" />
+				<TextField fx:id="tNumber" alignment="CENTER" maxWidth="50.0" minWidth="50.0" promptText="12345" />
+			</children>
+			<VBox.margin>
+				<Insets />
+			</VBox.margin>
+		</HBox>
+		<VBox spacing="5.0" VBox.vgrow="ALWAYS">
+			<children>
+				<HBox spacing="5.0">
+					<children>
+						<TextField fx:id="lblName" promptText="name" />
+						<ComboBox fx:id="cbPosition" prefWidth="150.0" promptText="position" />
+						<ComboBox fx:id="cbLocation" layoutX="159.0" layoutY="10.0" prefWidth="150.0" promptText="location" />
+						<ComboBox fx:id="cbCategory" layoutX="309.0" layoutY="10.0" prefWidth="150.0" promptText="category" />
+					</children>
+				</HBox>
+				<TextArea fx:id="tfCase" VBox.vgrow="ALWAYS" />
+				<HBox>
+					<children>
+						<Pane HBox.hgrow="ALWAYS">
+							<HBox.margin>
+								<Insets />
+							</HBox.margin>
+						</Pane>
+						<Button fx:id="bSave" mnemonicParsing="false" text="save" />
+					</children>
+				</HBox>
+			</children>
+			<VBox.margin>
+				<Insets />
+			</VBox.margin>
+		</VBox>
+	</children>
+	<padding>
+		<Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+	</padding>
+</VBox>

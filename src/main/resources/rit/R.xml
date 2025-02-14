@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<R xmlns="codes.abdullah.rit" modifiers="public"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="codes.abdullah.rit 
+	file:C:/Users/aldok/.m2/repository/codes/abdullah/RGenerator/xsd/R.xsd"
+	R-class-package="codes.abdullah.cosl.r" R-class-generate="true"
+	R-class-outputDir="${project.build.sourceDirectory}/codes/abdullah/cosl/r"
+	properties-strings-generate="true"
+	properties-strings-outputDir="${project.build.resourceDirectory}/strings"
+	properties-strings-output-encoding="iso-8859-1">
+
+
+	<class name="strings" modifiers="public static">
+		<class name="text" modifiers="public static">
+			<include-strings file="text.xml" />
+		</class>
+		<class name="error" modifiers="public static">
+			<include-strings file="error.xml" />
+		</class>
+		<class name="title" modifiers="public static">
+			<include-strings file="title.xml" />
+		</class>
+		<class name="status" modifiers="public static">
+			<include-strings file="status.xml" />
+		</class>
+		<class name="paths">
+			<path name="APP_DIR" construct-resolve="lazy" type="java.nio.file.Path">${user.home}/cosl-let</path>
+		</class>
+	</class>
+	<class name="resources" modifiers="public static">
+		<class name="fxml" modifiers="public static">
+			<path  type="java.nio.file.Path" matcher-pattern="glob:**/*.fxml" construct-resolve="ignore"
+				prefix="/" parent-depth="2">${project.build.resourceDirectory}/fxml</path>
+		</class>
+	</class>
+
+</R>
