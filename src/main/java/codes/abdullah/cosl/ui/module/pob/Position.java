@@ -2,8 +2,17 @@ package codes.abdullah.cosl.ui.module.pob;
 
 public class Position {
 	private String title;
+	private PositionCode code;
 	private Shift shift;
-	
+
+	public PositionCode getCode() {
+		return code;
+	}
+
+	public void setCode(PositionCode code) {
+		this.code = code;
+	}
+
 	public String getTitle() {
 		return title;
 	}
@@ -19,7 +28,5 @@ public class Position {
 	public void setShift(Shift shift) {
 		this.shift = shift;
 	}
-	
-	
 
 }

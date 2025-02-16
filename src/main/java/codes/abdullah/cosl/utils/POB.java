@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -32,22 +33,25 @@ import com.poiji.exception.PoijiExcelType;
 import com.poiji.option.PoijiOptions;
 
 import codes.abdullah.cosl.r.R;
-import codes.abdullah.cosl.ui.module.pob.AramcoId;
 import codes.abdullah.cosl.ui.module.pob.Company;
-import codes.abdullah.cosl.ui.module.pob.EmployeeId;
+import codes.abdullah.cosl.ui.module.pob.Employee;
 import codes.abdullah.cosl.ui.module.pob.Id;
-import codes.abdullah.cosl.ui.module.pob.KSAId;
-import codes.abdullah.cosl.ui.module.pob.PassportId;
 import codes.abdullah.cosl.ui.module.pob.Person;
 import codes.abdullah.cosl.ui.module.pob.Pob;
 import codes.abdullah.cosl.ui.module.pob.Position;
-import codes.abdullah.cosl.ui.module.pob.Room;
+import codes.abdullah.cosl.ui.module.pob.PositionCode;
+import codes.abdullah.cosl.ui.module.pob.Rig;
+import codes.abdullah.cosl.ui.module.pob.Shift;
+import codes.abdullah.digits.Digits;
 
 public class POB {
 
-	private Set<Person> persons = new HashSet<Person>();
 
 	public static void loadPobs(LocalDate from, LocalDate to) throws IOException {
+		
+		
+
+		
 		Set<Path> files = new HashSet<Path>();
 		Files.newDirectoryStream(R.paths.POB_DIR, new DirectoryStream.Filter<Path>() {
 			@Override
@@ -68,12 +72,38 @@ public class POB {
 			files.add(p);
 		});
 
+		System.out.println(R.patterns.COMPANIES_CATEGOIES);
 		for (Path file : files) {
 			PoijiOptions options = PoijiOptions.PoijiOptionsBuilder.settings().headerStart(12).build();
 			InputStream stream = new FileInputStream(file.toFile());
 			List<DummyPerson> dummypob = Poiji.fromExcel(stream, PoijiExcelType.XLSX, DummyPerson.class, options).stream()
-					.filter(pe -> pe.room != 0).collect(Collectors.toList());
+					.collect(Collectors.toList());
+			
+			List<DummyPerson> dummypob2 = new ArrayList<POB.DummyPerson>();
+			String currentCompanyCategory = null;
+			for (int i = 0; i < dummypob.size(); i++) {
+				DummyPerson dp = dummypob.get(i);
+				if(dp.no != null) {
+					if(dp.no.equals(R.keys.LAST_WORD_IN_POB_TO_STOP_LOOKING))
+						break;
+					if(!Digits.ints.isValid(dp.no)) {
+						if(dp.no.matches(R.patterns.COMPANIES_CATEGOIES)) {
+							currentCompanyCategory = dp.no;
+							continue;
+						}						
+						throw new IllegalStateException("undefined: "+dp.no);
+					}
+					dp.companyCategory = currentCompanyCategory;
+					dummypob2.add(dp);
+				}
+			}
+			
 
+
+			
+			//=========================
+			
+			
 			// ========================
 			// load the file manually and check if the total pob equals the loaded
 			// by poiji
@@ -86,8 +116,8 @@ public class POB {
 			CellValue cellValue = getCell(sheet, evaluator, "L5");
 			int totalPob = (int) cellValue.getNumberValue();
 			wb.close();
-			if (dummypob.size() != totalPob) {
-				throw new IllegalStateException(file.toString() + ", " + dummypob.size() + " vs " + totalPob);
+			if (dummypob2.size() != totalPob) {
+				throw new IllegalStateException(file.toString() + ", " + dummypob2.size() + " vs " + totalPob);
 			}
 
 
@@ -95,32 +125,50 @@ public class POB {
 			// ========================
 
 			Set<Person> all = new HashSet<Person>();
-			for (DummyPerson dp : dummypob) {
-				String name = dp.name;
+			for (DummyPerson dp : dummypob2) {
+				
+				//============
+				//===========
+				Id id = new Id();
+				id.setNumber(dp.id);				
 				// =============
-				String nationality = dp.nationality;
-				KSAId ksaId = null;
-				AramcoId aramcoId = null;
-				PassportId passportId = null;
-				// ==========
-				String companyName = dp.company;
-				String positionName = dp.position;
-				EmployeeId employeeId = null;
-				Position position = new Position(positionName, employeeId);
-				Company company = new Company(companyName, position);
-				// ==========
-				int roomNumber = dp.room;
-				int lifeBoatNumber = dp.lifeboat;
-				Room room = new Room(roomNumber, lifeBoatNumber);
-				// =========
-				Id id = new Id(nationality, ksaId, aramcoId, passportId);
-				// =========
-				Person person = new Person(name, id, company, room);
+				Company company = new Company();
+				company.setCategory(currentCompanyCategory);
+				company.setName(dp.company);
+				// =============
+				Shift shift = Shift.fromString(dp.shift);
+				// =============
+				Position position = new Position();
+				position.setShift(shift);
+				position.setTitle(dp.position);
+				
+				position.setCode(findPositionCode(dp.position, dp.company, dp.companyCategory));
+				// =============
+				Rig rig = new Rig();
+				rig.setArrivalDate(LocalDate.parse(dp.dateOnRig, DateTimeFormatter.ofPattern("d-MMM-yy")));
+				rig.setLifeboat(dp.lifeboat);
+				rig.setName("HUNTER");
+				rig.setRoom(Digits.ints.parse(dp.room));
+				
+				// =============
+				Person person = dp.companyCategory.matches(R.patterns.EMPLOYEE_CATEGORY) ? new Employee() : new Person();
+				Person supervisor = new Person();
+				person.setName(dp.name);
+				person.setCompany(company);
+				person.setNationality(dp.nationality);
+				person.setSupervisor(supervisor);
+				// =============
+				
+				// =============
 				all.add(person);
+				// ==========
+				
 			}
 			//=============
 			LocalDate date = getDate(sheet, "L11");
-			Pob pob = new Pob(date, all);
+			Pob pob  = new Pob();
+			pob.setAll(all);
+			pob.setDate(date);
 			
 		}
 
@@ -171,10 +219,11 @@ public class POB {
 	}
 
 	public static class DummyPerson {
+		public String companyCategory;
 		@ExcelCellName("No")
-		int no;
+		String no;
 		@ExcelCellName("Room")
-		int room;
+		String room;
 		@ExcelCellName("Name")
 		String name;
 		@ExcelCellName("Position")
@@ -199,15 +248,32 @@ public class POB {
 		String dateOnRig;
 		@ExcelCellName("DOB")
 		String dob;
-
 		@Override
 		public String toString() {
-			return "PobEntry [no=" + no + ", room=" + room + ", name=" + name + ", position=" + position + ", company="
-					+ company + ", shift=" + shift + ", lifeboat=" + lifeboat + ", nationality=" + nationality + ", id="
-					+ id + ", medicalDueDate=" + medicalDueDate + ", bosietDueDate=" + bosietDueDate
-					+ ", evacuationOrder=" + evacuationOrder + ", dateOnRig=" + dateOnRig + ", dob=" + dob + "]";
+			return "DummyPerson [companyCategory=" + companyCategory + ", no=" + no + ", room=" + room + ", name="
+					+ name + ", position=" + position + ", company=" + company + ", shift=" + shift + ", lifeboat="
+					+ lifeboat + ", nationality=" + nationality + ", id=" + id + ", medicalDueDate=" + medicalDueDate
+					+ ", bosietDueDate=" + bosietDueDate + ", evacuationOrder=" + evacuationOrder + ", dateOnRig="
+					+ dateOnRig + ", dob=" + dob + "]";
 		}
 
+		
+
 	}
+	
+	
+	private static PositionCode findPositionCode(String position, String company, String companyCategory) {
+		if (company.equalsIgnoreCase(R.companies.ARAMCO))
+			return PositionCode.CLIENT;
+		else if (companyCategory.equalsIgnoreCase(R.companies.COSL_THIRD_PARTY))
+			return PositionCode.COSL_SERVICE;
+		else if (companyCategory.equalsIgnoreCase(R.companies.COSL_THIRD_PARTY_CATERING))
+			return PositionCode.CATERING;
+		else if (companyCategory.equalsIgnoreCase(R.companies.ARAMCO_THIRD_PARTY))
+			return PositionCode.CLIENT_SERVICE;
+		return PositionCode.fromString(position);
+	}
+	
+	
 
 }

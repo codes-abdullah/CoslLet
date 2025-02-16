@@ -19,8 +19,8 @@ public class MainCLI {
 		
 		FileUtils.createDirsIfNotExists(R.paths.APP_DIR);
 		FileUtils.createDirsIfNotExists(R.paths.POB_DIR);
-		POB.loadPobs(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2));
-//		MainFX.main(args);
+//		POB.loadPobs(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2));
+		MainFX.main(args);
 	}
 
 }
